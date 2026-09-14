@@ -1,0 +1,35 @@
+plugins {
+    id 'com.android.application'
+}
+
+android {
+    namespace '__PACKAGE_NAME__'
+    compileSdk 35
+
+    defaultConfig {
+        applicationId '__PACKAGE_NAME__'
+        minSdk __MIN_SDK__
+        targetSdk 35
+        versionCode __VERSION_CODE__
+        versionName '__VERSION_NAME__'
+    }
+
+    buildTypes {
+        debug {
+            debuggable true
+        }
+        release {
+            minifyEnabled false
+        }
+    }
+
+    packagingOptions {
+        resources {
+            excludes += ['/META-INF/{AL2.0,LGPL2.1}']
+        }
+    }
+}
+
+dependencies {
+    implementation 'androidx.webkit:webkit:1.17.0'
+}

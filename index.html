@@ -1,0 +1,153 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="color-scheme" content="dark">
+  <title>Web2APK — GitHub Pages Android Builder</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="topbar">
+    <div>
+      <div class="eyebrow">GITHUB PAGES + GITHUB ACTIONS</div>
+      <h1>Web2APK</h1>
+      <p>Package HTML, static sites, or web projects into installable Android APKs.</p>
+    </div>
+    <div class="pill" id="connectionPill">Not connected</div>
+  </header>
+
+  <main class="shell">
+    <section class="hero card">
+      <div>
+        <h2>Build a real offline-capable APK</h2>
+        <p>The browser page collects your source and settings. GitHub Actions runs the Android toolchain, bundles your web files inside the APK, mirrors ordinary remote dependencies when requested, and returns the compiled APK.</p>
+      </div>
+      <div class="hero-badges">
+        <span>HTML / ZIP</span><span>npm builds</span><span>URL mirror</span><span>APK artifact</span>
+      </div>
+    </section>
+
+    <div class="grid two">
+      <section class="card">
+        <div class="section-title"><span class="step">1</span><div><h2>Builder repository</h2><p>Use this repo or a separate private repo containing the included workflow.</p></div></div>
+        <div class="form-grid two-col">
+          <label>GitHub owner<input id="owner" autocomplete="off" placeholder="your-user"></label>
+          <label>Builder repository<input id="repo" autocomplete="off" placeholder="web2apk-builder"></label>
+          <label>Branch<input id="branch" value="main" autocomplete="off"></label>
+          <label>Fine-grained token<input id="token" type="password" autocomplete="off" placeholder="github_pat_…"></label>
+        </div>
+        <div class="row compact">
+          <label class="check"><input type="checkbox" id="rememberSession" checked><span>Keep token only for this browser tab</span></label>
+          <button class="secondary" id="testConnection">Test connection</button>
+        </div>
+        <div class="notice small">Recommended token permissions on the builder repo: <strong>Contents: read/write</strong> and <strong>Actions: read/write</strong>. The token is never written into the project or APK.</div>
+        <div class="notice small"><strong>Privacy:</strong> browser uploads are committed temporarily to the builder repo. Deleting them after a build does not erase Git history, so use a <strong>private builder repository</strong> for private/proprietary source.</div>
+      </section>
+
+      <section class="card">
+        <div class="section-title"><span class="step">2</span><div><h2>App identity</h2><p>These values become Android application metadata.</p></div></div>
+        <div class="form-grid two-col">
+          <label>App name<input id="appName" value="My Offline App"></label>
+          <label>Package name<input id="packageName" value="com.example.offlineapp" spellcheck="false"></label>
+          <label>Version name<input id="versionName" value="1.0.0"></label>
+          <label>Version code<input id="versionCode" type="number" min="1" step="1" value="1"></label>
+          <label>Minimum Android API<select id="minSdk"><option value="24">24 — Android 7.0+</option><option value="26">26 — Android 8.0+</option><option value="28">28 — Android 9+</option><option value="29">29 — Android 10+</option><option value="30">30 — Android 11+</option><option value="31">31 — Android 12+</option><option value="33">33 — Android 13+</option><option value="34">34 — Android 14+</option><option value="35">35 — Android 15+</option></select></label>
+          <label>Orientation<select id="orientation"><option value="unspecified">Auto</option><option value="portrait">Portrait</option><option value="landscape">Landscape</option><option value="sensor">Sensor</option><option value="fullSensor">Full sensor</option><option value="locked">Locked</option></select></label>
+        </div>
+        <label class="filebox">Optional PNG app icon<input id="iconFile" type="file" accept="image/png"><span id="iconLabel">Use built-in icon</span></label>
+      </section>
+    </div>
+
+    <section class="card">
+      <div class="section-title"><span class="step">3</span><div><h2>Web source</h2><p>Upload a finished app, let Actions build an npm project, mirror a URL, or point at an existing path in the builder repo.</p></div></div>
+      <div class="segmented" id="sourceTabs">
+        <button class="active" data-source="upload">Upload HTML / ZIP</button>
+        <button data-source="url">Website URL</button>
+        <button data-source="repo">Existing repo path</button>
+      </div>
+
+      <div class="source-panel active" data-panel="upload">
+        <label class="dropzone" id="dropzone">
+          <input id="sourceFile" type="file" accept=".html,.htm,.zip,text/html,application/zip">
+          <strong>Choose or drop an HTML file / ZIP</strong>
+          <span id="sourceFileLabel">ZIP can contain a static site or a source project with package.json.</span>
+        </label>
+      </div>
+      <div class="source-panel" data-panel="url">
+        <label>Website URL<input id="siteUrl" type="url" placeholder="https://example.com/app/"></label>
+        <div class="notice small">Best for static sites. Login-gated pages, backend APIs, streaming services, server rendering, and dynamically generated data cannot automatically become a fully offline app.</div>
+      </div>
+      <div class="source-panel" data-panel="repo">
+        <label>Repository-relative source path<input id="repoSourcePath" placeholder="sources/my-app.zip or sources/index.html"></label>
+        <div class="notice small">Useful for sources too large for browser upload or projects you already pushed into the builder repository.</div>
+      </div>
+
+      <details class="advanced">
+        <summary>Web-project build settings</summary>
+        <div class="form-grid three-col">
+          <label>Entry file<input id="entryFile" value="index.html"></label>
+          <label>Install command<input id="installCommand" placeholder="Auto: npm ci / npm install"></label>
+          <label>Build command<input id="buildCommand" value="npm run build"></label>
+          <label>Output directory<input id="outputDir" placeholder="Auto: dist / build / out / www"></label>
+          <label class="check block"><input type="checkbox" id="buildWebProject" checked><span>If package.json exists, install dependencies and build it first</span></label>
+        </div>
+      </details>
+    </section>
+
+    <div class="grid two">
+      <section class="card">
+        <div class="section-title"><span class="step">4</span><div><h2>Offline packaging</h2><p>Control how external web dependencies are handled.</p></div></div>
+        <label>Dependency mode
+          <select id="offlineMode">
+            <option value="mirror" selected>Mirror what can be safely downloaded</option>
+            <option value="strict">Strict offline — fail build if critical network references remain</option>
+            <option value="keep-online">Keep external URLs unchanged</option>
+          </select>
+        </label>
+        <div class="form-grid two-col">
+          <label>Max one remote asset (MB)<input id="maxAssetMb" type="number" min="1" max="1000" value="200"></label>
+          <label>Max mirrored total (MB)<input id="maxTotalMb" type="number" min="10" max="2000" value="1000"></label>
+        </div>
+        <div class="notice small">The mirror pass handles normal remote scripts, stylesheets, images, fonts, media, CSS URLs, static ES-module imports, and obvious static fetches such as JSON/WASM/ONNX files. The build report lists anything still dependent on a network.</div>
+      </section>
+
+      <section class="card">
+        <div class="section-title"><span class="step">5</span><div><h2>Android behavior</h2><p>WebView wrapper settings.</p></div></div>
+        <div class="toggle-list">
+          <label class="check"><input id="allowInternet" type="checkbox"><span>Give this APK INTERNET permission</span></label>
+          <label class="check"><input id="allowWebNavigation" type="checkbox"><span>Allow remote web pages to open inside the app</span></label>
+          <label class="check"><input id="allowCleartext" type="checkbox"><span>Allow plain HTTP (not only HTTPS)</span></label>
+          <label class="check"><input id="fullscreen" type="checkbox"><span>Fullscreen app</span></label>
+          <label class="check"><input id="keepScreenOn" type="checkbox"><span>Keep screen awake while open</span></label>
+          <label class="check"><input id="mediaAutoplay" type="checkbox"><span>Allow media playback without a tap</span></label>
+        </div>
+      </section>
+    </div>
+
+    <section class="card build-card">
+      <div class="section-title"><span class="step">6</span><div><h2>Build APK</h2><p>Uploads the build input to your builder repo, dispatches the workflow, monitors it, and extracts the APK from the finished artifact.</p></div></div>
+      <div class="row">
+        <label class="check"><input id="cleanupInputs" type="checkbox" checked><span>Delete temporary input files after the build</span></label>
+        <button class="primary big" id="buildButton">Build Android APK</button>
+      </div>
+      <div id="progress" class="progress hidden"><div id="progressBar"></div></div>
+      <div class="status-row"><span id="statusDot" class="dot"></span><strong id="statusText">Ready</strong><span id="buildIdText"></span></div>
+      <pre id="log" class="log" aria-live="polite">Ready.</pre>
+      <div id="downloads" class="downloads"></div>
+    </section>
+
+    <section class="card caveats">
+      <h2>What “complete offline APK” means here</h2>
+      <div class="grid three">
+        <div><strong>Works well</strong><p>Standalone HTML tools, games, dashboards, local AI/model demos, PWAs, React/Vue/Svelte builds, bundled media, fonts, WASM and static data.</p></div>
+        <div><strong>Needs app-specific work</strong><p>Apps that call cloud APIs, require login servers, stream data, use remote databases, or depend on a website backend.</p></div>
+        <div><strong>Not a generic conversion</strong><p>Windows EXEs, macOS apps, arbitrary desktop binaries, iOS apps, or native software compiled for another CPU/OS cannot simply be wrapped into Android.</p></div>
+      </div>
+    </section>
+  </main>
+
+  <footer>Web2APK starter • source stays in the builder repository you choose • GitHub token is used only by this page</footer>
+  <script src="app.js"></script>
+</body>
+</html>

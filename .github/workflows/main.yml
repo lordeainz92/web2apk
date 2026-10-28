@@ -1,3 +1,4 @@
+
 name: Build Web2APK APK
 
 on:
@@ -6,6 +7,7 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+
     steps:
       - name: Baixar repositório
         uses: actions/checkout@v4
@@ -16,6 +18,11 @@ jobs:
           distribution: temurin
           java-version: '17'
 
-      - name: Listar arquivos do projeto
-        run: ls -la
-        
+      - name: Verificar arquivos
+        run: |
+          echo "Conteúdo do repositório:"
+          ls -la
+          echo "Conteúdo de android-template:"
+          ls -la android-template
+          echo "Procurando arquivos Gradle:"
+          find . -maxdepth 4 -type f \( -name 'gradlew' -o -name 'settings.gradle' -o -name 'settings.gradle.kts' -o -name 'build.gradle' -o -name 'build.gradle.kts' \)
